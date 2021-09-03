@@ -23,7 +23,6 @@ class PersonServiceTest {
         // TODO: Uncomment line bellow to initialise mocks
         MockitoAnnotations.openMocks(this);
         // TODO: pass mock into PersonService constructor
-
         underTest = new PersonService(personDAO);
 //        personDAO = Mockito.mock(PersonDAO.class);
     }
@@ -39,6 +38,7 @@ class PersonServiceTest {
     void itCanSavePerson() {
         //Given
         Person person = new Person(1, "Sara", 25);
+
         Mockito.when(personDAO.insertPerson(eq(person)))
                 .thenReturn(1);
 
@@ -48,7 +48,9 @@ class PersonServiceTest {
         // When
         int result = underTest.savePerson(person);
         ArgumentCaptor<Person> personArgumentCaptor = ArgumentCaptor.forClass(Person.class);
+
         Mockito.verify(personDAO).insertPerson(personArgumentCaptor.capture());
+
         Person expectedSarah = personArgumentCaptor.getValue();
         //THEN
         assertThat(expectedSarah).isEqualTo(person);
@@ -81,6 +83,7 @@ class PersonServiceTest {
         }).isInstanceOf(IllegalStateException.class)
                 .hasMessage("Person cannot have empty fields");
 
+//        Mockito.verify(personDAO, Mockito.never()).insertPerson(person);
         Mockito.verifyNoInteractions(personDAO);
     }
 
@@ -109,6 +112,7 @@ class PersonServiceTest {
                 .hasMessage("Person cannot be null");
 
         Mockito.verifyNoInteractions(personDAO);
+//        Mockito.verify(personDAO, Mockito.never()).insertPerson(null);
     }
 
     @Test
@@ -135,10 +139,8 @@ class PersonServiceTest {
         Mockito.when(personDAO.deletePerson(person.getId())).thenReturn(1);
         // When
         int result = underTest.removePerson(person.getId());
-        Mockito.verify(personDAO).deletePerson(person.getId());
-        Integer expectedId = person.getId();
+//        Mockito.verify(personDAO).deletePerson(person.getId());
         //THEN
-        assertThat(expectedId).isEqualTo(person.getId());
         assertThat(result).isEqualTo(1);
     }
 
@@ -148,7 +150,7 @@ class PersonServiceTest {
         Mockito.when(personDAO.selectAllPeople()).thenReturn(List.of(
                 new Person(2, "Jerry",30)
         ));
-        Mockito.when(personDAO.deletePerson(mockPerson.getId())).thenReturn(1);
+//        Mockito.when(personDAO.deletePerson(mockPerson.getId())).thenReturn(1);
         assertThatThrownBy(() -> {
             underTest.removePerson(mockPerson.getId());
         }).isInstanceOf(IllegalStateException.class)
