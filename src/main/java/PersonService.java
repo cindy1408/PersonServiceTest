@@ -16,7 +16,7 @@ public class PersonService {
         }
         if (person.getAge() == null ||
                 person.getId() == null ||
-                person.getName() != null && person.getName().length() == 0) {
+                person.getName() == null || person.getName().length() == 0) {
             throw new IllegalStateException("Person cannot have empty fields");
         }
 

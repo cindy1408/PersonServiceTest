@@ -4,13 +4,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-
 import java.util.List;
-
+import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
-
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 
 class PersonServiceTest {
@@ -42,30 +39,20 @@ class PersonServiceTest {
     void itCanSavePerson() {
         //Given
         Person person = new Person(1, "Sara", 25);
-
         Mockito.when(personDAO.insertPerson(eq(person)))
                 .thenReturn(1);
 
         Mockito.when(personDAO.selectAllPeople()).thenReturn(List.of(
                 new Person(2, "Lizzie", 25)
         ));
-
         // When
         int result = underTest.savePerson(person);
-        assertThatThrownBy(() -> {
-
-        }).isInstanceOf(IllegalStateException.class)
-                .hasMessage("");
-
         ArgumentCaptor<Person> personArgumentCaptor = ArgumentCaptor.forClass(Person.class);
         Mockito.verify(personDAO).insertPerson(personArgumentCaptor.capture());
-
         Person expectedSarah = personArgumentCaptor.getValue();
-
         //THEN
         assertThat(expectedSarah).isEqualTo(person);
         assertThat(result).isEqualTo(1);
-
     }
 
     @Test
@@ -82,17 +69,13 @@ class PersonServiceTest {
             underTest.savePerson(person);
         }).isInstanceOf(IllegalStateException.class)
                 .hasMessage("person with id " + person.getId() + " already exists");
-
         Mockito.verify(personDAO, Mockito.never()).insertPerson(person);
     }
 
     @Test
     void shouldThrowWhenPersonIdIsNull() {
-        //Given
         Person person = new Person(null, "sara", 25);
-        // When
 
-        // Then
         assertThatThrownBy(() -> {
             underTest.savePerson(person);
         }).isInstanceOf(IllegalStateException.class)
@@ -106,7 +89,6 @@ class PersonServiceTest {
         //Given
         Person person = new Person(1, "sara", null);
         // When
-
         // Then
         assertThatThrownBy(() -> {
             underTest.savePerson(person);
@@ -120,7 +102,6 @@ class PersonServiceTest {
     void shouldThrowWhenPersonIsNull() {
         //Given
         // When
-
         // Then
         assertThatThrownBy(() -> {
             underTest.savePerson(null);
@@ -135,7 +116,6 @@ class PersonServiceTest {
         //Given
         Person person = new Person(1, null, 25);
         // When
-
         // Then
         assertThatThrownBy(() -> {
             underTest.savePerson(person);
@@ -146,17 +126,57 @@ class PersonServiceTest {
     }
 
     @Test
-    void itCanDeletePerson() {
+    void itCanDeletePersonWhenTheyExist() {
+        //Given
+        Person person = new Person(2, "Sara", 25);
+        Mockito.when(personDAO.selectAllPeople()).thenReturn(List.of(
+                new Person(2, "Sara", 25)
+        ));
+        Mockito.when(personDAO.deletePerson(person.getId())).thenReturn(1);
+        // When
+        int result = underTest.removePerson(person.getId());
+        Mockito.verify(personDAO).deletePerson(person.getId());
+        Integer expectedId = person.getId();
+        //THEN
+        assertThat(expectedId).isEqualTo(person.getId());
+        assertThat(result).isEqualTo(1);
+    }
 
+    @Test
+    void cantDeletePersonAsTheyDoNotExist(){
+        Person mockPerson = new Person(1, "Kenny", 25);
+        Mockito.when(personDAO.selectAllPeople()).thenReturn(List.of(
+                new Person(2, "Jerry",30)
+        ));
+        Mockito.when(personDAO.deletePerson(mockPerson.getId())).thenReturn(1);
+        assertThatThrownBy(() -> {
+            underTest.removePerson(mockPerson.getId());
+        }).isInstanceOf(IllegalStateException.class)
+                .hasMessage("person with id " + mockPerson.getId() + " not found");
+        Mockito.verify(personDAO, Mockito.never()).deletePerson(mockPerson.getId());
     }
 
     @Test
     void canGetPeopleFromDB() {
-
+        Mockito.when(personDAO.selectAllPeople()).thenReturn(List.of(
+                new Person(1, "James", 25),
+                new Person(2, "Gabby", 25),
+                new Person(3, "Brenda", 25)
+        ));
+        List<Person> fullList = underTest.getPeople();
+        assertThat(fullList).isEqualTo(personDAO.selectAllPeople());
     }
 
     @Test
     void canGetPersonById() {
+        Person mockPerson = new Person(1, "Hannah", 25);
 
+        Mockito.when(personDAO.getPersonById(mockPerson.getId())).thenReturn(Optional.of(mockPerson));
+        Mockito.when(personDAO.selectAllPeople()).thenReturn(List.of(
+                mockPerson = new Person(1, "Hannah", 25)
+        ));
+        Optional<Person> expected = personDAO.getPersonById(mockPerson.getId());
+        Optional<Person> actual = underTest.getPersonById(mockPerson.getId());
+        assertThat(actual).isEqualTo(expected);
     }
 }
